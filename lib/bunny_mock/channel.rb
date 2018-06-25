@@ -224,6 +224,17 @@ module BunnyMock
       @connection.register_queue queue
     end
 
+
+    ##
+    # Access the connection object queue list as a pass-through.
+    #
+    # @return [Hash] Queues
+    # @api public
+    #
+    def queues
+      @connection.queues
+    end
+
     ##
     # Create a new {BunnyMock::Queue} instance with no name
     #
