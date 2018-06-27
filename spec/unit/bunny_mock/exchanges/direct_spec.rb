@@ -22,9 +22,17 @@ describe BunnyMock::Exchanges::Direct do
       expect(@second.pop[2]).to eq('Testing message')
     end
 
-    it 'should throw an exception during publishing' do
+    it 'should throw a channel exception during publishing' do
       @source.mock_behavior = BunnyMock::Exchange::DeliveryBehavior::CHANNELERROR
       expect { @source.publish 'Testing message', routing_key: 'queue.second' }.to raise_exception(Bunny::ChannelError)
+    end
+    it 'should throw a network exception during publishing' do
+      @source.mock_behavior = BunnyMock::Exchange::DeliveryBehavior::NETWORKERROR
+      expect { @source.publish 'Testing message', routing_key: 'queue.second' }.to raise_exception(Bunny::NetworkFailure)
+    end
+    it 'should throw a timeout exception during publishing' do
+      @source.mock_behavior = BunnyMock::Exchange::DeliveryBehavior::TIMEOUTERROR
+      expect { @source.publish 'Testing message', routing_key: 'queue.second' }.to raise_exception(Bunny::ConnectionTimeout)
     end
   end
 end

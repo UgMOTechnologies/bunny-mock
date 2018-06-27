@@ -33,6 +33,7 @@ module BunnyMock
       SUCCEED = 1
       CHANNELERROR = 2
       NETWORKERROR = 3
+      TIMEOUTERROR = 4
     end
 
     #
@@ -127,8 +128,12 @@ module BunnyMock
       if @mock_behavior == DeliveryBehavior::SUCCEED
         # handle message sending, varies by type
         deliver(payload, opts.merge(exchange: name), opts.fetch(:routing_key, ''))
-      else
+      elsif @mock_behavior == DeliveryBehavior::CHANNELERROR
         raise Bunny::ChannelError.new('Simulated channel failure.', @channel, false)
+      elsif @mock_behavior == DeliveryBehavior::NETWORKERROR
+        raise Bunny::NetworkFailure.new('Simulated network failure.','dummy')
+      elsif @mock_behavior == DeliveryBehavior::TIMEOUTERROR
+        raise Bunny::ConnectionTimeout.new('Simulated timeout failure.')
       end
 
       self
