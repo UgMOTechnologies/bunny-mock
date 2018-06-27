@@ -1,27 +1,30 @@
 describe BunnyMock::Exchanges::Direct do
+  context '#deliver' do
+    before do
+      @source = @channel.direct 'xchg.source'
 
-	context '#deliver' do
+      @first = @channel.queue 'queue.first'
+      @second = @channel.queue 'queue.second'
+      @third = @channel.queue 'queue.third'
 
-		before do
-			@source = @channel.direct 'xchg.source'
+      @first.bind @source
+      @second.bind @source
+      @third.bind @source
+    end
 
-			@first = @channel.queue 'queue.first'
-			@second = @channel.queue 'queue.second'
-			@third = @channel.queue 'queue.third'
+    it 'should only deliver to direct route match' do
+      @source.publish 'Testing message', routing_key: 'queue.second'
 
-			@first.bind @source
-			@second.bind @source
-			@third.bind @source
-		end
+      expect(@first.message_count).to eq(0)
+      expect(@third.message_count).to eq(0)
 
-		it 'should only deliver to direct route match' do
-			@source.publish 'Testing message', routing_key: 'queue.second'
+      expect(@second.message_count).to eq(1)
+      expect(@second.pop[2]).to eq('Testing message')
+    end
 
-			expect(@first.message_count).to eq(0)
-			expect(@third.message_count).to eq(0)
-
-			expect(@second.message_count).to eq(1)
-			expect(@second.pop[2]).to eq('Testing message')
-		end
-	end
+    it 'should throw an exception during publishing' do
+      @source.mock_behavior = BunnyMock::Exchange::DeliveryBehavior::CHANNELERROR
+      expect { @source.publish 'Testing message', routing_key: 'queue.second' }.to raise_exception(Bunny::ChannelError)
+    end
+  end
 end

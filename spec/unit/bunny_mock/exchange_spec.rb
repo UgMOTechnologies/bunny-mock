@@ -152,4 +152,12 @@ describe BunnyMock::Exchange do
       expect(@session.exchange_exists?(@exchange.name)).to be_falsey
     end
   end
+
+  context '#mock_behavior' do
+    it 'should set the delivery behavior' do
+      @exchange = @channel.direct 'xchg.direct'
+      @exchange.mock_behavior = BunnyMock::Exchange::DeliveryBehavior::CHANNELERROR
+      expect(@exchange.mock_behavior).to eq(BunnyMock::Exchange::DeliveryBehavior::CHANNELERROR)
+    end
+  end
 end

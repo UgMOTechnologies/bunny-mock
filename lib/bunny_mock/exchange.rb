@@ -29,6 +29,12 @@ module BunnyMock
       end
     end
 
+    module DeliveryBehavior
+      SUCCEED = 1
+      CHANNELERROR = 2
+      NETWORKERROR = 3
+    end
+
     #
     # API
     #
@@ -64,6 +70,10 @@ module BunnyMock
     # @return [Boolean] If exchange has been deleted
     attr_reader :deleted
 
+    # @public
+    # @return the mock behavior last set
+    attr_accessor :mock_behavior
+
     # @private
     def initialize(channel, name, type, opts)
       # store creation information
@@ -77,6 +87,7 @@ module BunnyMock
       @auto_delete  = @opts[:auto_delete]
       @internal     = @opts[:internal]
       @arguments    = @opts[:arguments]
+      @mock_behavior = DeliveryBehavior::SUCCEED
 
       # create binding storage
       @routes = {}
@@ -113,8 +124,12 @@ module BunnyMock
     # @api public
     #
     def publish(payload, opts = {})
-      # handle message sending, varies by type
-      deliver(payload, opts.merge(exchange: name), opts.fetch(:routing_key, ''))
+      if @mock_behavior == DeliveryBehavior::SUCCEED
+        # handle message sending, varies by type
+        deliver(payload, opts.merge(exchange: name), opts.fetch(:routing_key, ''))
+      else
+        raise Bunny::ChannelError.new('Simulated channel failure.', @channel, false)
+      end
 
       self
     end
