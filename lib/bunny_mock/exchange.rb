@@ -34,6 +34,7 @@ module BunnyMock
       CHANNELERROR = 2
       NETWORKERROR = 3
       TIMEOUTERROR = 4
+      STANDARDERROR = 5
     end
 
     #
@@ -125,17 +126,19 @@ module BunnyMock
     # @api public
     #
     def publish(payload, opts = {})
-      if @mock_behavior == DeliveryBehavior::SUCCEED
+      case @mock_behavior
+      when DeliveryBehavior::SUCCEED
         # handle message sending, varies by type
         deliver(payload, opts.merge(exchange: name), opts.fetch(:routing_key, ''))
-      elsif @mock_behavior == DeliveryBehavior::CHANNELERROR
+      when DeliveryBehavior::CHANNELERROR
         raise Bunny::ChannelError.new('Simulated channel failure.', @channel, false)
-      elsif @mock_behavior == DeliveryBehavior::NETWORKERROR
-        raise Bunny::NetworkFailure.new('Simulated network failure.','dummy')
-      elsif @mock_behavior == DeliveryBehavior::TIMEOUTERROR
-        raise Bunny::ConnectionTimeout.new('Simulated timeout failure.')
+      when DeliveryBehavior::NETWORKERROR
+        raise Bunny::NetworkFailure.new('Simulated network failure.', 'dummy')
+      when DeliveryBehavior::TIMEOUTERROR
+        raise Bunny::ConnectionTimeout.new, 'Simulated timeout failure.'
+      when DeliveryBehavior::STANDARDERROR
+        raise Rails::StandardError.new, 'Simulated other failure.'
       end
-
       self
     end
 
